@@ -7,17 +7,19 @@ class Grid extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        visualWidth: window.innerWidth * 0.8,
-        visualHeight: window.innerHeight * 0.8,
-        xStart: 23,
-        yStart: 27
+        canvasWidth: window.innerWidth * 0.8,
+        canvasHeight: window.innerHeight * 0.8,
+        stagePos: {
+          x: 0,
+          y: 0
+        }
     };
   }
 
   updateDimensions() {
     this.setState({
-        visualWidth: window.innerWidth * 0.8,
-        visualHeight: window.innerHeight * 0.8
+        canvasWidth: window.innerWidth * 0.8,
+        canvasHeight: window.innerHeight * 0.8
     });
   }
 
@@ -31,64 +33,79 @@ class Grid extends Component {
   }
   
   render() {
-    const CELL_SIZE = 10;
-    const NUM_CELLS_X = 150;
-    const NUM_CELLS_Y = 150;
-    const CANVAS_VIRTUAL_WIDTH = CELL_SIZE * NUM_CELLS_X;
-    const CANVAS_VIRTUAL_HEIGHT = CELL_SIZE * NUM_CELLS_Y;
+    const grid = [
+      ['red', 'yellow'],
+      ['green', 'blue']
+    ];
 
-    const FIRST_COL_WIDTH = CELL_SIZE - (this.state.xStart % CELL_SIZE);
-    const LAST_COL_WIDTH = (this.state.visualWidth - FIRST_COL_WIDTH) % CELL_SIZE;
-    
-    const FIRST_ROW_HEIGHT = CELL_SIZE - (this.state.yStart % CELL_SIZE);
-    const LAST_ROW_HEIGHT = (this.state.visualHeight - FIRST_ROW_HEIGHT) % CELL_SIZE;
+    const WIDTH = 100;
+    const HEIGHT = 100;
 
-    const NUM_VIS_X_CELLS = (this.state.visualWidth % CELL_SIZE === 0)
-        ? Math.round(this.state.visualWidth / CELL_SIZE)
-        : Math.round(this.state.visualWidth / CELL_SIZE) + 1;
+    const stagePos = this.state.stagePos;
 
-    const NUM_VIS_Y_CELLS = (this.state.visualHeight % CELL_SIZE === 0)
-        ? Math.round(this.state.visualHeight / CELL_SIZE)
-        : Math.round(this.state.visualHeight / CELL_SIZE) + 1;
+    const startX = Math.floor((-stagePos.x - window.innerWidth) / WIDTH) * WIDTH;
+    const endX = Math.floor((-stagePos.x + window.innerWidth * 2) / WIDTH) * WIDTH;
 
-    const getCellColor = (x,y) => {
-        return ((x+y) % 2 === 1) ? "red" : "blue";
+    const startY = Math.floor((-stagePos.y - window.innerHeight) / HEIGHT) * HEIGHT;
+    const endY = Math.floor((-stagePos.y + window.innerHeight * 2) / HEIGHT) * HEIGHT;
+
+    const gridComponents = [];
+    for (var x = startX; x < endX; x += WIDTH) {
+      for (var y = startY; y < endY; y += HEIGHT) {
+
+        const indexX = Math.abs(x / WIDTH) % grid.length;
+        const indexY = Math.abs(y / HEIGHT) % grid[0].length;
+
+        gridComponents.push(
+          <Rect
+            x={x}
+            y={y}
+            width={WIDTH}
+            height={HEIGHT}
+            fill={grid[indexX][indexY]}
+            stroke="black"
+          />
+        );
+      }
     }
 
     return (
-      <div className={"grid-container"} width={this.state.visualWidth} height={this.state.visualHeight}>
+      <div
+        className={"grid-container"}
+        width={this.state.canvasWidth}
+        height={this.state.canvasHeight}
+      >
         <Stage
           component={"component"}
-          width={this.state.visualWidth}
-          height={this.state.visualHeight}
+          width={this.state.canvasWidth}
+          height={this.state.canvasHeight}
           className={"grid"}
+          draggable={true}
+          dragBoundFunc={ (pos) => {
+            //TODO : actual bounds
+            const UPPER_BOUND = 100;
+            const LOWER_BOUND = -100;
+
+            const boundedX = (pos.x > UPPER_BOUND) ? UPPER_BOUND
+              : (pos.x < LOWER_BOUND) ? LOWER_BOUND
+              : pos.x;
+              
+            const boundedY = (pos.y > UPPER_BOUND) ? UPPER_BOUND
+              : (pos.y < LOWER_BOUND) ? LOWER_BOUND
+              : pos.y;
+
+            return {
+              x: boundedX,
+              y: boundedY
+            };
+          }}
+          onDragEnd={e => {
+            this.setState({
+              stagePos: e.currentTarget.position()
+            })
+          }}
         >
-        {console.log(this)}
-          <Layer>
-            {[...Array(NUM_VIS_X_CELLS)].map((_, i) => (
-              [...Array(NUM_VIS_Y_CELLS)].map((_, j) => (
-                <Rect
-                  x={(i === 0) ? 0 : FIRST_COL_WIDTH + ((i - 1) * CELL_SIZE)}
-                  y={(j === 0) ? 0 : FIRST_ROW_HEIGHT + ((j - 1) * CELL_SIZE)}
-                  width={(i === 0)
-                    ? FIRST_COL_WIDTH
-                    : (i === NUM_VIS_X_CELLS - 1)
-                      ? LAST_COL_WIDTH
-                      : CELL_SIZE
-                  }
-                  height={(j === 0)
-                    ? FIRST_ROW_HEIGHT
-                    : (j === NUM_VIS_Y_CELLS - 1)
-                      ? LAST_ROW_HEIGHT
-                      : CELL_SIZE
-                  }
-                  fill={
-                    getCellColor(i,j)
-                  }
-                />
-              ))
-            ))}
-          </Layer>
+          <Layer>{gridComponents}</Layer>
         </Stage>
       </div>
     );
