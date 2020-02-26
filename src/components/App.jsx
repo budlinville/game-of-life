@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import Grid from './Grid';
+import LifeGrid from './LifeGrid';
 
 
 class App extends Component {
   render() {  
     return (
-      <Grid />
+      <LifeGrid />
     );
   }
 }

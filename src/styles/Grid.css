@@ -7,3 +7,19 @@
 .grid {
     border: 2px solid black;
 }
+
+.gridLeft {
+    border-left: 2px solid red;
+}
+
+.gridRight {
+    border-left: 2px solid red;
+}
+
+.gridTop {
+    border-top: 2px solid red;
+}
+
+.gridBottom {
+    border-bottom: 2px solid red;
+}
